@@ -10,6 +10,11 @@ namespace EpicTMR
     {
         #region Constructor
 
+        /// <summary>
+        /// Creates a single MyVisualTimer with controls to ReStart and Stop the timer. Also includes GetPanel() for altering the appearance
+        /// </summary>
+        /// <param name="name">Name of timer</param>
+        /// <param name="cooldown">Amount of time between reminders</param>
         public MyVisualTimer(string name, double cooldown)
         {
             _name = name;
@@ -20,6 +25,9 @@ namespace EpicTMR
             ScaleContainer();
         }
 
+        /// <summary>
+        /// Calls methods to create a container, a toggle button, a reset button and the functionality for a MyVisualTimer
+        /// </summary>
         private void Initialize()
         {
             InitializeContainer();
@@ -27,56 +35,58 @@ namespace EpicTMR
             InitializeCooldownButton();
             InitializeTimer();
         }
-
         #endregion
 
         #region Properties
-
-        //Variable to get a baseline for scales
+        //Properties
         private readonly string _name;
         private double _baseCooldown;
         private double _currentCooldown;
-        private string _timerText;
         private bool _isRunning;
         private int _runTime;
 
+        //Components
+        //Container for _timerToggle and _cooldownButton
         private Panel _myTimerContainer;
         private CheckBox _timerToggle;
         private Button _cooldownButton;
+        //Functionality to update _cooldownButton.Text
         private Timer _timer;
 
+        //Variables for displaying time left in _cooldownButton.Text
+        //Conditionally formatted _currentCooldown (hh"h":mm"m":ss"s")
         private string _cooldownFormatted;
-
+        //Text displayed on the reset button. _name + _currentCooldown (formatted hh:mm:ss)
+        private string _timerText;
         #endregion
 
         #region Methods
-
+        /// <summary>
+        /// Updates the timers cooldown to a new value after user altered interval or cooldown in Main
+        /// </summary>
+        /// <param name="cd">Value to update to</param>
         internal void ChangeCooldown(double cd)
         {
             _baseCooldown = cd;
             if (!_timer.Enabled) _currentCooldown = cd;
             UpdateLabel();
         }
-
-        #region UI Methods
-
+        
+        /// <summary>
+        /// Method for getting the container panel to visually alter and position it
+        /// </summary>
+        /// <returns>_myTimerContainer</returns>
         public Panel GetPanel()
         {
             return _myTimerContainer;
         }
-
         #endregion
-
-        #endregion
-
-        //If you can see it, it's here.
 
         #region User Interface, UI
-
-        //Handles any visual updates that are made as the timer is running
-
         #region UI updates
-
+        /// <summary>
+        /// Changes the text of the reset button and then calls UpdateLabelProgressColor()
+        /// </summary>
         private void UpdateLabel()
         {
             var t = TimeSpan.FromSeconds(_currentCooldown);
@@ -93,6 +103,9 @@ namespace EpicTMR
             UpdateLabelProgressColor();
         }
 
+        /// <summary>
+        /// Changes the color of the reset button depending on time left
+        /// </summary>
         private void UpdateLabelProgressColor()
         { 
             var forceDefaultColor = _runTime >= 5 && _isRunning;
@@ -109,13 +122,11 @@ namespace EpicTMR
             }
             else _cooldownButton.ResetBackColor();
         }
-
         #endregion
-
-        //Handles things you only need to do when initializing the timer UI
-
         #region UI initializing
-
+        /// <summary>
+        /// Creates the container for the timers on-off toggle and reset button
+        /// </summary>
         private void InitializeContainer()
         {
             _myTimerContainer = new Panel
@@ -126,6 +137,10 @@ namespace EpicTMR
             };
         }
 
+        /// <summary>
+        /// Creates the timer's on-off toggle and adds it to container
+        /// Adds an event handler that calls ToggleChanged()
+        /// </summary>
         private void InitializeToggle()
         {
             _timerToggle = new CheckBox
@@ -137,6 +152,10 @@ namespace EpicTMR
             _myTimerContainer.Controls.Add(_timerToggle);
         }
 
+        /// <summary>
+        /// Creates the timer's reset button and adds it to container
+        /// Adds an event handler that calls OnCooldownButtonClick()
+        /// </summary>
         private void InitializeCooldownButton()
         {
             _cooldownButton = new Button
@@ -149,19 +168,20 @@ namespace EpicTMR
             _myTimerContainer.Controls.Add(_cooldownButton);
         }
 
+        /// <summary>
+        /// Changes containers height to 23
+        /// </summary>
         private void ScaleContainer()
         {
             _myTimerContainer.Size = new Size(_myTimerContainer.Size.Width, 23);
         }
-
         #endregion
-
         #endregion
-
-        //ReStart, Stop, etc.
 
         #region Timer controls
-
+        /// <summary>
+        /// Resets the timer to it's default _baseCooldown and instantly starts it. Then calls UpdateLabel()
+        /// </summary>
         public void ReStart()
         {
             _isRunning = true;
@@ -171,6 +191,9 @@ namespace EpicTMR
             UpdateLabel();
         }
 
+        /// <summary>
+        /// Resets the timer to it's default _baseCooldown without re-starting the timer. Then calls UpdateLabel()
+        /// </summary>
         public void Stop()
         {
             _isRunning = false;
@@ -180,23 +203,34 @@ namespace EpicTMR
             UpdateLabel();
         }
 
+        /// <summary>
+        /// Starts or stops the timer based on _timerToggle's state
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ToggleChanged(object sender, EventArgs e)
         {
             if (_timerToggle.Checked) ReStart();
             else Stop();
         }
 
+        /// <summary>
+        /// Calls ReStart() to restart the timer and sets _runTime back to 0
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnCooldownButtonClick(object sender, EventArgs e)
         {
             ReStart();
             _runTime = 0;
         }
-
         #endregion
 
-        //Handles initializing a forms timer that reduces _currentCooldown and calls for label updates
         #region Timer logics
-
+        /// <summary>
+        /// Creates a Windows Forms timer to handle tracking time
+        /// Creates an event handler that calls OnTick()
+        /// </summary>
         private void InitializeTimer()
         {
             _timer = new Timer
@@ -206,6 +240,13 @@ namespace EpicTMR
             _timer.Tick += OnTick;
         }
 
+        /// <summary>
+        /// Reduces current cooldown by 1 second and then calls UpdateLabel()
+        ///
+        /// If _current cooldown would drop to 0, restarts the timer and plays an audio cue. Calls ReStart()
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnTick(object sender, EventArgs e)
         {
             if (_currentCooldown > 1)
@@ -222,11 +263,13 @@ namespace EpicTMR
             _runTime++;
         }
 
+        /// <summary>
+        /// Plays an audio cue
+        /// </summary>
         private void PlayChime()
         {
             SystemSounds.Beep.Play();
         }
-
         #endregion
     }
 }

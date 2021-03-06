@@ -50,34 +50,38 @@ namespace EpicTMR
      */
     public partial class Main : Form
     {
-        #region class variables
-        //Stop condition for timer
-        private static bool _timerIsRunning;
-
-        //Probably shouldn't have these here but helps me read what i'm doing
-        private static readonly int Min = 60;
-        private static readonly int Hour = 60 * Min;
-
-        //Cooldown tracking
+        #region Variables
+        //Basic information
+        //Basic cooldowns for timer creation
         private static readonly object[] CommandJournal = new object[]
         {
             new[]{"Hunt"      ,   "Materials",   "Training",   "Adventure",   "Quest"  },
             new double[]{1 * Min    ,   5 * Min   ,   15 * Min ,   1 * Hour  ,   6 * Hour}
         };
+        //Constants to make hardcoded cooldowns more readable
+        private const int Min = 60;
+        private const int Hour = 60 * Min;
 
-        //Variable for initializing arrays
-        private static readonly int CommandJournalLength = ((string[])CommandJournal[0]).Length;
+        //Variables for handling timers
+        //Variable for altering startStopBtn functionality
+        private static bool _timerIsRunning;
+        //Keeps track of created arrays
+        private static int MyVisualTimerCount = ((string[])CommandJournal[0]).Length;
+        //Array for storing timers
+        private static readonly MyVisualTimer[] Timers = new MyVisualTimer[MyVisualTimerCount];
+        //Container for storing timers
+        private static Panel _cdPanel;
 
-        //Modifier for patreon cooldown reduction
+        //User modified values
+        //Modifier for Patreon cooldown reduction
         private static double _cdModifier = 1;
         //Modifier for added seconds to give extra reaction time to prompts
         private static double _intervalDelay = 5;
-        //Array for storing base cooldowns
-        private static readonly MyVisualTimer[] Timers = new MyVisualTimer[CommandJournalLength];
-
-        private static Panel _cdPanel;
         #endregion
 
+        /// <summary>
+        /// Loads the main window and initializes MyVisualTimers using the hardcoded cooldowns
+        /// </summary>
         public Main()
         {
             InitializeComponent();
@@ -85,6 +89,9 @@ namespace EpicTMR
         }
 
         #region Cooldown panel
+        /// <summary>
+        /// Initializes the panel in which generated MyVisualTimers are stored and then calls CreateTimers()
+        /// </summary>
         private void InitializeCdPanel()
         {
             _cdPanel = new Panel
@@ -98,7 +105,7 @@ namespace EpicTMR
 
             Label cdHeader = new Label
             {
-                Text = @"Cool-downs:",
+                Text = @"Cooldowns:",
                 Location = new Point(0, 2),
                 AutoSize = true
             };
@@ -108,25 +115,32 @@ namespace EpicTMR
         }
         #endregion
 
-        #region Button click handling
+        #region Start all / Stop all button handling
+        /// <summary>
+        /// Event handler for starting and stopping all generated MyVisualTimers at the same time
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void StartStopButtonClick(object sender, EventArgs e)
         {
             if (!_timerIsRunning)
             {
                 _timerIsRunning = true;
                 StartHandler();
-                btnStartTimers.Text = @"Stop all timers";
+                startStopBtn.Text = @"Stop all timers";
             }
             else
             {
                 _timerIsRunning = false;
                 StopHandler();
-                btnStartTimers.Text = @"Start all timers";
+                startStopBtn.Text = @"Start all timers";
             }
-
         }
 
-        private void StopHandler()
+        /// <summary>
+        /// Stops all generated MyVisualTimers at the same time
+        /// </summary>
+        private static void StopHandler()
         {
             foreach (var timer in Timers)
             {
@@ -134,7 +148,10 @@ namespace EpicTMR
             }
         }
 
-        private void StartHandler()
+        /// <summary>
+        /// Resets and starts all generated MyVisualTimers at the same time
+        /// </summary>
+        private static void StartHandler()
         {
             foreach (var timer in Timers)
             {
@@ -143,74 +160,94 @@ namespace EpicTMR
         }
         #endregion
 
-        #region Verifying settings
+        #region Verifying users input and updating settings
+        /// <summary>
+        /// Parses user input from CooldownTextBox (cdr) and validates it. Updates _cdModifier
+        ///
+        /// Validation: cdr = [0,100]
+        /// Valid: _cdModifier = (100 - cdr) / 100
+        /// Invalid: _cdModifier = 1 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CooldownTextBox_TextChanged(object sender, EventArgs e)
         {
+            _cdModifier = 1;
+            cooldownTextBox.BackColor = Color.LightPink;
+
             try
             {
                 double cdr = double.Parse(cooldownTextBox.Text.Split('%')[0]);
-                if (cdr >= 0 && cdr <= 100)
+                if (0 <= cdr && cdr <= 100)
                 {
                     cooldownTextBox.BackColor = Color.White;
                     _cdModifier = (100 - cdr) / 100;
-                    UpdateCooldowns();
-                }
-                else
-                {
-                    cooldownTextBox.BackColor = Color.LightPink;
-                    _cdModifier = 1;
                 }
             }
             catch (Exception)
-            {
-                cooldownTextBox.BackColor = Color.LightPink;
+            { 
+                //
             }
+
+            UpdateCooldowns();
         }
 
+        /// <summary>
+        /// Parses user input from intervalTextBox (interval) and validates it. Updates _intervalDelay.
+        ///
+        /// Validation: interval is a positive value
+        /// Valid: _intervalDelay = interval
+        /// Invalid: _intervalDelay = 5
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void IntervalTextBox_TextChanged(object sender, EventArgs e)
         {
+            intervalTextBox.BackColor = Color.LightPink;
+            _intervalDelay = 5;
+
             try
             {
-                double interval = double.Parse(IntervalTextBox.Text.Split('s')[0]);
+                double interval = double.Parse(intervalTextBox.Text.Split('s')[0]);
                 if (interval >= 0)
                 {
-                    IntervalTextBox.BackColor = Color.White;
+                    intervalTextBox.BackColor = Color.White;
                     _intervalDelay = interval;
-                    UpdateCooldowns();
-                }
-                else
-                {
-                    IntervalTextBox.BackColor = Color.LightPink;
-                    _intervalDelay = 5;
                 }
             }
             catch (Exception)
             {
-                IntervalTextBox.BackColor = Color.LightPink;
+                //
             }
+
+            UpdateCooldowns();
         }
 
-        private void UpdateCooldowns()
+        /// <summary>
+        /// Calls MyVisualTimers' method ChangeCooldown() with updated cooldowns after user has altered _cdModifier or _intervalDelay values
+        /// </summary>
+        private static void UpdateCooldowns()
         {
-            for (int i = 0; i < CommandJournalLength; i++)
+            double[] cd = ((double[]) CommandJournal[1]);
+            for (int i = 0; i < cd.Length; i++)
             {
-                double cd = ((double[])CommandJournal[1])[i] * _cdModifier + _intervalDelay;
-                Timers[i].ChangeCooldown(cd);
+                Timers[i].ChangeCooldown(cd[i] * _cdModifier + _intervalDelay);
             }
         }
         #endregion
 
         #region Timer logics
-
-        //Creates timers and sets their intervals based on cdValuesDouble
-        private void CreateTimers()
+        /// <summary>
+        /// Creates timers and sets their intervals based on cdValuesDouble
+        /// </summary>
+        private static void CreateTimers()
         {
-            for (int i = 0; i < CommandJournalLength; i++)
+            for (int i = 0; i < MyVisualTimerCount; i++)
             {
                 //Logical
                 string name = ((string[])CommandJournal[0])[i];
                 double cooldown = ((double[])CommandJournal[1])[i] * _cdModifier + _intervalDelay;
-                MyVisualTimer tempMyTimer = new MyVisualTimer(name, cooldown);
+                var tempMyTimer = new MyVisualTimer(name, cooldown);
                 Timers[i] = tempMyTimer;
 
                 //Visual
