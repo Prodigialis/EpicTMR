@@ -45,7 +45,7 @@ namespace EpicTMR
             this.btnStartTimers.Name = "btnStartTimers";
             this.btnStartTimers.Size = new System.Drawing.Size(101, 23);
             this.btnStartTimers.TabIndex = 0;
-            this.btnStartTimers.Text = "Start/Stop all";
+            this.btnStartTimers.Text = "Start all timers";
             this.btnStartTimers.UseVisualStyleBackColor = true;
             this.btnStartTimers.Click += new System.EventHandler(this.StartStopButtonClick);
             // 

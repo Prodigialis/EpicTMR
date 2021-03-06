@@ -251,4 +251,10 @@
         pv/yXwtKB/+hB//+CFZBFeKYBQp+iPxJ961tF+D/A3jX5n8xQujgAAAAAElFTkSuQmCC
 </value>
   </data>
+  <data name="MyVisualTimer_UpdateLabel__0____1_" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="Main_StartStopButtonClick_Stop_all_timers" xml:space="preserve">
+    <value>Stop all timers</value>
+  </data>
 </root>

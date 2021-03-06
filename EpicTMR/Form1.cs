@@ -4,20 +4,16 @@ using System.Windows.Forms;
 
 namespace EpicTMR
 {
-    /*PLANNING
+    /*PLANNING TODO
      * Note: The audio cues are referred to as chimes.
      * 
      * #########################
      * FIXES:
      * 
-     * Remove chime on manual resets
-     * 
-     * Replace current progress colors with only displaying red when near expiring and green for max(5, intervalSeconds) seconds after a chime
-     * 
      * Figure out why Windows Defender doesn't like me :D
      *  note: Could be because the program is not in their database and therefor is not whitelisted
-     *  
-     *  Change title from "EpicRPG EpicTMR" to just "EpicTMR"
+     *
+     * Add proper documentation
      * 
      * #########################
      * FUTURE FEATURES:
@@ -43,12 +39,10 @@ namespace EpicTMR
      * UI IMPROVEMENTS:
      * 
      * Automatic scaling
-     *  X and Y scales / Figure out if there is a scale property in winforms
+     *  X and Y scales / Figure out if there is a scale property in Windows.Forms
      *  Event handler to main window that is called on resize
      *  
      * Smart resize on-load
-     * 
-     * Flash count setting
      * 
      * re-designed Recent Chimes -panel
      * 
@@ -58,30 +52,30 @@ namespace EpicTMR
     {
         #region class variables
         //Stop condition for timer
-        private static bool timerIsRunning = false;
+        private static bool _timerIsRunning;
 
         //Probably shouldn't have these here but helps me read what i'm doing
-        private static int _min = 60;
-        private static int _hour = 60 * _min;
+        private static readonly int Min = 60;
+        private static readonly int Hour = 60 * Min;
 
         //Cooldown tracking
-        private static object[] commandJournal = new object[]
+        private static readonly object[] CommandJournal = new object[]
         {
-            new string[]{"Hunt"      ,   "Materials",   "Training",   "Adventure",   "Quest"  },
-            new double[]{1 * _min    ,   5 * _min   ,   15 * _min ,   1 * _hour  ,   6 * _hour}
+            new[]{"Hunt"      ,   "Materials",   "Training",   "Adventure",   "Quest"  },
+            new double[]{1 * Min    ,   5 * Min   ,   15 * Min ,   1 * Hour  ,   6 * Hour}
         };
 
         //Variable for initializing arrays
-        private static int cJournLength = ((string[])commandJournal[0]).Length;
+        private static readonly int CommandJournalLength = ((string[])CommandJournal[0]).Length;
 
         //Modifier for patreon cooldown reduction
-        private static double cdModifier = 1;
+        private static double _cdModifier = 1;
         //Modifier for added seconds to give extra reaction time to prompts
-        private static double intervalDelay = 5;
+        private static double _intervalDelay = 5;
         //Array for storing base cooldowns
-        private static MyVisualTimer[] timers = new MyVisualTimer[cJournLength];
+        private static readonly MyVisualTimer[] Timers = new MyVisualTimer[CommandJournalLength];
 
-        private static Panel cdPanel;
+        private static Panel _cdPanel;
         #endregion
 
         public Main()
@@ -93,23 +87,23 @@ namespace EpicTMR
         #region Cooldown panel
         private void InitializeCdPanel()
         {
-            cdPanel = new Panel
+            _cdPanel = new Panel
             {
                 Location = new Point(this.ClientSize.Width / 2, 0),
                 Name = "cdPanel",
-                Size = new Size(this.ClientSize.Width / 2, Math.Max(this.ClientSize.Height / 2, 20 + commandJournal.Length) * 23),
-                TabIndex = 0
+                Size = new Size(this.ClientSize.Width / 2, Math.Max(this.ClientSize.Height / 2, 20 + CommandJournal.Length) * 23),
+                TabIndex = 0,
             };
-            this.Controls.Add(cdPanel);
+            this.Controls.Add(_cdPanel);
 
             Label cdHeader = new Label
             {
-                Text = "Cooldowns:",
+                Text = @"Cool-downs:",
                 Location = new Point(0, 2),
                 AutoSize = true
             };
-            cdPanel.Controls.Add(cdHeader);
-
+            _cdPanel.Controls.Add(cdHeader);
+            
             CreateTimers();
         }
         #endregion
@@ -117,38 +111,39 @@ namespace EpicTMR
         #region Button click handling
         private void StartStopButtonClick(object sender, EventArgs e)
         {
-            if (!timerIsRunning)
+            if (!_timerIsRunning)
             {
-                timerIsRunning = true;
+                _timerIsRunning = true;
                 StartHandler();
+                btnStartTimers.Text = @"Stop all timers";
             }
             else
             {
-                timerIsRunning = false;
+                _timerIsRunning = false;
                 StopHandler();
+                btnStartTimers.Text = @"Start all timers";
             }
 
         }
 
         private void StopHandler()
         {
-            foreach (MyVisualTimer timer in timers)
+            foreach (var timer in Timers)
             {
-                timer.Reset();
-                timer.Pause();
+                timer.Stop();
             }
         }
 
         private void StartHandler()
         {
-            foreach (MyVisualTimer timer in timers)
+            foreach (var timer in Timers)
             {
-                timer.Start();
+                timer.ReStart();
             }
         }
         #endregion
 
-        #region Text Box handling
+        #region Verifying settings
         private void CooldownTextBox_TextChanged(object sender, EventArgs e)
         {
             try
@@ -157,12 +152,13 @@ namespace EpicTMR
                 if (cdr >= 0 && cdr <= 100)
                 {
                     cooldownTextBox.BackColor = Color.White;
-                    cdModifier = (100 - cdr) / 100;
+                    _cdModifier = (100 - cdr) / 100;
                     UpdateCooldowns();
                 }
                 else
                 {
                     cooldownTextBox.BackColor = Color.LightPink;
+                    _cdModifier = 1;
                 }
             }
             catch (Exception)
@@ -179,12 +175,13 @@ namespace EpicTMR
                 if (interval >= 0)
                 {
                     IntervalTextBox.BackColor = Color.White;
-                    intervalDelay = interval;
+                    _intervalDelay = interval;
                     UpdateCooldowns();
                 }
                 else
                 {
                     IntervalTextBox.BackColor = Color.LightPink;
+                    _intervalDelay = 5;
                 }
             }
             catch (Exception)
@@ -195,10 +192,10 @@ namespace EpicTMR
 
         private void UpdateCooldowns()
         {
-            for (int i = 0; i < cJournLength; i++)
+            for (int i = 0; i < CommandJournalLength; i++)
             {
-                double cd = ((double[])commandJournal[1])[i] * cdModifier + intervalDelay;
-                timers[i].ChangeCooldown(cd);
+                double cd = ((double[])CommandJournal[1])[i] * _cdModifier + _intervalDelay;
+                Timers[i].ChangeCooldown(cd);
             }
         }
         #endregion
@@ -208,18 +205,18 @@ namespace EpicTMR
         //Creates timers and sets their intervals based on cdValuesDouble
         private void CreateTimers()
         {
-            for (int i = 0; i < cJournLength; i++)
+            for (int i = 0; i < CommandJournalLength; i++)
             {
                 //Logical
-                string name = ((string[])commandJournal[0])[i];
-                double cooldown = ((double[])commandJournal[1])[i] * cdModifier + intervalDelay;
+                string name = ((string[])CommandJournal[0])[i];
+                double cooldown = ((double[])CommandJournal[1])[i] * _cdModifier + _intervalDelay;
                 MyVisualTimer tempMyTimer = new MyVisualTimer(name, cooldown);
-                timers[i] = tempMyTimer;
+                Timers[i] = tempMyTimer;
 
                 //Visual
                 Panel temp = tempMyTimer.GetPanel();
                 temp.Location = new Point(0, 18 + i * 25);
-                cdPanel.Controls.Add(temp);
+                _cdPanel.Controls.Add(temp);
             }
         }
         #endregion

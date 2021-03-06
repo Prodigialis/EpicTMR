@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31019.35
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpicTMR", "WindowsFormsApp1\EpicTMR.csproj", "{BACFD443-161B-4D07-9C71-BBC1B3EDBC38}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpicTMR", "EpicTMR\EpicTMR.csproj", "{BACFD443-161B-4D07-9C71-BBC1B3EDBC38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
