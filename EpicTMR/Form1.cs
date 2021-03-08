@@ -8,22 +8,23 @@ namespace EpicTMR
      * Note: The audio cues are referred to as chimes.
      * 
      * #########################
-     * FIXES:
+     * FIXES/CHANGES:
      * 
      * Figure out why Windows Defender doesn't like me :D
-     *  note: Could be because the program is not in their database and therefor is not whitelisted
+     *  note: Could be because the program is not in their database and therefore is not whitelisted
      *
-     * Add proper documentation
-     * 
+     *
      * #########################
      * FUTURE FEATURES:
+     *
+     * Figure out if WinForms needs to be replaced with something in order to turn this in to a proper program
      * 
-     * Add proper audio to chimes
+     * Add proper audio to chimes to replace SystemSounds.Beep.Play();
      *  Hunt: Arrow hit sound
      *  Materials: Axe chopping?
      *  Training: Pages being turned?
      *  Adventure: A horn of some sort?
-     *  Quest: ?
+     *  Quest: An actual chime sound?
      *  
      * Add custom timer
      *  Counter for already created timers so created timers are properly aligned in UI
@@ -33,20 +34,66 @@ namespace EpicTMR
      * Chime queue so that two sounds do not overlap
      *  -> New class for handling audio?
      *      -> Custom audio?
-     *  
+     *
      * 
      * #########################
-     * UI IMPROVEMENTS:
+     * FUTURE UI IMPROVEMENTS:
+     *
+     * Remove checkbox and re-design button functionality to a 1-2-3 form
+     *  1st press: Start
+     *  2nd press: Stop
+     *  3rd press: Reset
+     *  -Figure out if an eventhandler can be added to "swiping" the button for quick Reset + Restart
+     *  -Mousewheel up / down: Instantly increment by 1 (or 5?) seconds. Works while the timer is running
+     *
+     * Settings menu
+     * -Move %cdr and extra interval
+     *
+     * Settings for each timer
+     * -%cdr and extra intervals for each timer separately
+     *  -Option to "Overwrite on main window changes"
+     *  -Will have to edit constructor to accept double cdMod and int interval, default to main window if available, else default to 1, 0 respectively
      * 
+     *
      * Automatic scaling
      *  X and Y scales / Figure out if there is a scale property in Windows.Forms
      *  Event handler to main window that is called on resize
      *  
-     * Smart resize on-load
+     * Smart resize on-load. Maybe a saved variable?
      * 
-     * re-designed Recent Chimes -panel
+     * re-designed and re-apply Recent Chimes -panel.
+     *  -Open a secondary window?
      * 
      * New skin with EpicTMR theme
+     *
+     * "Always on top" -feature
+     *
+     *
+     * #########################
+     * DISTANT FUTURE FEATURES:
+     *
+     * Turn in to an all-around timer program
+     *  -New icon. I like the design but perhaps make the colors Greyscale and the picture HD instead of pixel art
+     *
+     * Add a timer-package importer (to preserve EpicRPG functionality)
+     *
+     * Add the option to change skins / import them as standalone or with packages
+     *
+     * Store timer variables and compare to system time to allow tracking created timers even when program is not running
+     *
+     * Drag and drop timers
+     *
+     *
+     * #########################
+     * DISTANT FUTURE UI:
+     *
+     * Make the UI look clean and less Win95 -ish
+     * 
+     * Make it possible to drag timers out of the actual window
+     *  -Always on top per timer
+     *  -Opacity per timer
+     *  -Opacity when hovered over
+     *  -Click-through without shortcuts/modifiers (ctrl, alt, shift, etc)
      */
     public partial class Main : Form
     {

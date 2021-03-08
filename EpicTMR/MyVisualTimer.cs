@@ -42,7 +42,6 @@ namespace EpicTMR
         private readonly string _name;
         private double _baseCooldown;
         private double _currentCooldown;
-        private bool _isRunning;
         private int _runTime;
 
         //Components
@@ -91,10 +90,15 @@ namespace EpicTMR
         {
             var t = TimeSpan.FromSeconds(_currentCooldown);
 
+            
+            /*
+             * Formats cooldown to [hours]h[minutes]m[seconds]s
+             * 59 === 59s
+             * 64 === 1m04s
+             * 3602 === 1h00m02s
+             */
             _cooldownFormatted = 
-                (t.Hours > 0 ? $"{t.Hours:##h}{t.Minutes:00m}" : 
-                t.Minutes > 0 ? $"{t.Minutes:##m}" : "")
-                + $"{t.Seconds:00s}";
+                (t.Hours > 0 ? $"{t.Hours:##h}{t.Minutes:00m}" : t.Minutes > 0 ? $"{t.Minutes:##m}" : "") + $"{t.Seconds:00s}";
 
             _timerText = $"{_name}: {_cooldownFormatted}";
 
@@ -108,17 +112,13 @@ namespace EpicTMR
         /// </summary>
         private void UpdateLabelProgressColor()
         { 
-            var forceDefaultColor = _runTime >= 5 && _isRunning;
+            var forceDefaultColor = _runTime <= 5 || _timer.Enabled == false;
             if (_baseCooldown - _currentCooldown <= 5 && !forceDefaultColor) _cooldownButton.BackColor = Color.LightGreen;
             else if (_currentCooldown <= 5 && !forceDefaultColor)
             {
                 var p = _currentCooldown / 5;
                 //ARGB yellow = FFFFFF00, red FFFF0000. Common -> FFFF  00 -> 255, 255, ,255
                 _cooldownButton.BackColor = Color.FromArgb(255, 255, (int)(p * 255), 0);
-                /*
-                (int)(Color.Yellow.R * p + Color.Red.R * (1 - p)), //red
-                (int)(Color.Yellow.G * p + Color.Red.G * (1 - p)), //green
-                (int)(Color.Yellow.B * p + Color.Red.B * (1 - p))); //blue*/
             }
             else _cooldownButton.ResetBackColor();
         }
@@ -184,7 +184,6 @@ namespace EpicTMR
         /// </summary>
         public void ReStart()
         {
-            _isRunning = true;
             _timer.Enabled = true;
             _timerToggle.Checked = true;
             _currentCooldown = _baseCooldown;
@@ -196,7 +195,6 @@ namespace EpicTMR
         /// </summary>
         public void Stop()
         {
-            _isRunning = false;
             _timer.Enabled = false;
             _timerToggle.Checked = false;
             _currentCooldown = _baseCooldown;
@@ -221,8 +219,8 @@ namespace EpicTMR
         /// <param name="e"></param>
         private void OnCooldownButtonClick(object sender, EventArgs e)
         {
-            ReStart();
             _runTime = 0;
+            ReStart();
         }
         #endregion
 
